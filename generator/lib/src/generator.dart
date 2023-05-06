@@ -1606,13 +1606,21 @@ ${bodyName.displayName} == null
 
     final parts = _getAnnotations(m, retrofit.Part);
     if (parts.isNotEmpty) {
-      if (m.parameters.length == 1 && m.parameters.first.type.isDartCoreMap) {
+      if (m.parameters.isNotEmpty &&
+          m.parameters.first.type.element is ClassElement &&
+          !_typeChecker(File).isAssignableFromType(m.parameters.first.type)) {
         blocks.add(
           declareFinal(dataVar)
               .assign(
                 refer('FormData').newInstanceNamed(
                   'fromMap',
-                  [CodeExpression(Code(m.parameters.first.displayName))],
+                  [
+                    CodeExpression(m.parameters.first.type.nullabilitySuffix !=
+                            NullabilitySuffix.question
+                        ? Code("${m.parameters.first.displayName}.toJson()")
+                        : Code(
+                            "${m.parameters.first.displayName}?.toJson() ?? <String,Map>{}"))
+                  ],
                 ),
               )
               .statement,
